@@ -1,28 +1,31 @@
-import pytest
 from fastapi.testclient import TestClient
 
 from src import app as app_module
 
 
-@pytest.fixture(autouse=True)
-def reset_state():
-    app_module.activities["Chess Club"]["participants"] = ["michael@mergington.edu", "daniel@mergington.edu"]
-    yield
-
-
 def test_unregister_participant_removes_email_from_activity():
+    # Arrange
     client = TestClient(app_module.app)
+    activity_name = "Chess Club"
+    email = "daniel@mergington.edu"
 
-    response = client.delete("/activities/Chess Club/participants/daniel@mergington.edu")
+    # Act
+    response = client.delete(f"/activities/{activity_name}/participants/{email}")
 
+    # Assert
     assert response.status_code == 200
-    assert "daniel@mergington.edu" not in app_module.activities["Chess Club"]["participants"]
-    assert "michael@mergington.edu" in app_module.activities["Chess Club"]["participants"]
+    assert email not in app_module.activities[activity_name]["participants"]
+    assert "michael@mergington.edu" in app_module.activities[activity_name]["participants"]
 
 
 def test_unregister_participant_returns_404_for_unknown_activity():
+    # Arrange
     client = TestClient(app_module.app)
+    activity_name = "Unknown"
+    email = "test@example.com"
 
-    response = client.delete("/activities/Unknown/participants/test@example.com")
+    # Act
+    response = client.delete(f"/activities/{activity_name}/participants/{email}")
 
+    # Assert
     assert response.status_code == 404
